@@ -1,0 +1,19 @@
+localhost:80
+
+skip_log /_nuxt*
+log {
+    format filter {
+        wrap console
+        fields {
+            request>remote_ip delete
+            request>remote_port delete
+            request>headers delete
+            request>tls delete
+            resp_headers delete
+            user_id delete
+        }
+    }
+}
+
+reverse_proxy /r/* localhost:8080
+reverse_proxy localhost:3000

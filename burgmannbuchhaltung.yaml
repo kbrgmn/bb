@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: burgmannbuchhaltung-data-volume-claim
+  namespace: burgmannbuchhaltung
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: burgmannbuchhaltungbackend
+  namespace: burgmannbuchhaltung
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: burgmannbuchhaltungbackend
+  template:
+    metadata:
+      labels:
+        app: burgmannbuchhaltungbackend
+      annotations:
+        deployment/id: "_DEFAULT_DEPLOYMENT_"
+    spec:
+      containers:
+        - name: burgmannbuchhaltungbackend
+          image: burgmann-creg/burgmannbuchhaltung-backend:latest
+          volumeMounts:
+            - name: burgmannbuchhaltung-config
+              mountPath: "/burgmannbuchhaltung/config/"
+              readOnly: true
+            - mountPath: "/burgmannbuchhaltung/data/"
+              name: wallet-data
+          ports:
+            - containerPort: 4545
+              name: http-api
+      volumes:
+        - name: burgmannbuchhaltung-config
+          configMap:
+            name: burgmannbuchhaltung-config
+        - name: wallet-data
+          persistentVolumeClaim:
+            claimName: burgmannbuchhaltung-data-volume-claim
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: burgmannbuchhaltungbackend
+  namespace: burgmannbuchhaltung
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http-api
+      protocol: TCP
+  selector:
+    app: burgmannbuchhaltungbackend
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: burgmannbuchhaltungfrontend
+  namespace: burgmannbuchhaltung
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: burgmannbuchhaltungfrontend
+  template:
+    metadata:
+      labels:
+        app: burgmannbuchhaltungfrontend
+      annotations:
+        deployment/id: "_DEFAULT_DEPLOYMENT_"
+    spec:
+      containers:
+        - name: burgmannbuchhaltungfrontend
+          image: burgmann-creg/burgmannbuchhaltung-frontend:latest
+          ports:
+            - containerPort: 3000
+              name: http-api
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: burgmannbuchhaltungfrontend
+  namespace: burgmannbuchhaltung
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http-api
+      protocol: TCP
+  selector:
+    app: burgmannbuchhaltungfrontend
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: burgmannbuchhaltung-ingress
+  namespace: burgmannbuchhaltung
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - buchhaltung.burgmann.systems
+      secretName: burgmannbuchhaltung-tls-secret
+  rules:
+    - host: buchhaltung.burgmann.systems
+      http:
+        paths:
+          - path: /r/
+            pathType: Prefix
+            backend:
+              service:
+                name: burgmannbuchhaltungbackend
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: burgmannbuchhaltungfrontend
+                port:
+                  number: 80
