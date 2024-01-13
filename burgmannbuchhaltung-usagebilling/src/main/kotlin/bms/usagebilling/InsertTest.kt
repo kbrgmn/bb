@@ -33,7 +33,7 @@ suspend fun main() {
         val t = Clock.System.now()
         val eventNames = listOf("WeatherForecast24h", "WeatherForecast7d", "WeatherForecast30d")
 
-        val jsonValues = (0 until 1000).map { InsertUsageEvent(group = projectId, id = UUID.generateUUID(), timestamp = t, name = eventNames.random(), reference = "JSON $idx") }
+        val jsonValues = (0 until 1000).map { InsertUsageEvent(group = projectId, id = UUID.generateUUID(), timestamp = t, type = eventNames.random(), reference = "JSON $idx") }
 
         measureTime {
             http.post("http://localhost:8080/usage-billing/push/json") {

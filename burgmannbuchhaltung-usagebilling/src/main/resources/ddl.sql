@@ -1,34 +1,34 @@
-drop table if exists events;
-create table if not exists events
+create or replace table events
 (
     organization UUID,
-    grouping     UUID,
+    group        UUID,
     id           UUID,
-    name         String,
+    type         String,
     timestamp    DateTime64(3, 'UTC'),
     billable     Boolean,
     reference    String,
     properties   String
 )
-    engine = MergeTree PRIMARY KEY (organization, grouping, id)
-        ORDER BY (organization, grouping, id)
+    engine = ReplacingMergeTree
+        PRIMARY KEY (organization, group, id)
+        ORDER BY (organization, group, id)
 ;
 
-drop table if exists resources;
-create table if not exists resources
+create or replace table resources
 (
     organization UUID,
-    grouping     UUID,
+    group        UUID,
     id           UUID,
-    name         String,
+    type         String,
     startDate    DateTime64(3, 'UTC'),
     endDate Nullable(DateTime64(3, 'UTC')),
     billable     Boolean,
     reference    String,
     properties   String
 )
-    engine = MergeTree PRIMARY KEY (organization, grouping, id)
-        ORDER BY (organization, grouping, id)
+    engine = ReplacingMergeTree
+        PRIMARY KEY (organization, group, id)
+        ORDER BY (organization, group, id)
 ;
 
 -- https://clickhouse.com/docs/en/integrations/postgresql#using-the-postgresql-table-engine

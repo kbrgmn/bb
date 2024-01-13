@@ -3,7 +3,6 @@ package bms.usagebilling.service.events
 import bms.usagebilling.db.DatabaseManager
 import bms.usagebilling.db.JAVA_UTC_TIMEZONE
 import com.clickhouse.client.ClickHouseClient
-import com.clickhouse.client.ClickHouseException
 import com.clickhouse.client.ClickHouseProtocol
 import com.clickhouse.client.ClickHouseResponse
 import com.clickhouse.client.ClickHouseResponseSummary
@@ -17,32 +16,30 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.uuid.UUID
 import kotlinx.uuid.toJavaUUID
-import java.io.IOException
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ExecutionException
 
 object EventService {
 
     /**
-     * @param organizationId: required - organization to show
-     * @param projectId: optional - project to show
-     * @param filterEvents: optional - list of accepted event names
+     * @param organization: required - organization to show
+     * @param group: optional - group to show
+     * @param filterType: optional - list of accepted event types
      * @param limit: optional - int to skip & int to limit
      * @param duringTime: optional - timestamp (in UTC!) to begin filter and timestamp (in UTC!) to end filter
      * @param orderDescending: default=false - order by timestamp descending instead of ascending
      */
     fun listEvents(
-        organizationId: UUID,
-        projectId: UUID? = null,
-        filterEvents: List<String>? = null,
+        organization: UUID,
+        group: UUID? = null,
+        filterType: List<String>? = null,
         limit: Pair<Int, Int>? = null,
         duringTime: Pair<LocalDateTime, LocalDateTime>? = null,
         orderDescending: Boolean = false,
     ) = doQuery(
         operation = Operation.LIST,
-        organization = organizationId,
-        group = projectId,
-        filterEvents = filterEvents,
+        organization = organization,
+        group = group,
+        filterTypes = filterType,
         limit = limit,
         duringTime = duringTime,
         orderDescending = orderDescending
@@ -79,7 +76,7 @@ object EventService {
         operation = Operation.COUNT,
         organization = organizationId,
         group = projectId,
-        filterEvents = filterEvents,
+        filterTypes = filterEvents,
         limit = limit,
         duringTime = duringTime,
         orderDescending = false
@@ -102,7 +99,7 @@ object EventService {
     /**
      * @param organization: required - organization to show
      * @param group: optional - project to show
-     * @param filterEvents: optional - list of accepted event names
+     * @param filterTypes: optional - list of accepted event types
      * @param limit: optional - int to skip & int to limit
      * @param duringTime: optional - timestamp (in UTC!) to begin filter and timestamp (in UTC!) to end filter
      * @param orderDescending: default=false - order by timestamp descending instead of ascending
@@ -111,58 +108,58 @@ object EventService {
         operation: Operation,
         organization: UUID,
         group: UUID? = null,
-        filterEvents: List<String>? = null,
+        filterTypes: List<String>? = null,
         limit: Pair<Int, Int>? = null,
         duringTime: Pair<LocalDateTime, LocalDateTime>? = null,
         orderDescending: Boolean = false,
         callback: (ClickHouseResponse) -> T,
-    ): T =
-        ClickHouseClient.newInstance(ClickHouseProtocol.HTTP).use { client ->
-            val query = StringBuilder(
-                when (operation) {
-                    Operation.LIST -> "SELECT * FROM ${DatabaseManager.eventsTable}"
-                    Operation.COUNT -> "SELECT count(*) FROM ${DatabaseManager.eventsTable}"
-                }
-            )
-
-            query.append(" WHERE organization = :organization")
-
-            val params = arrayListOf<ClickHouseValue>(ClickHouseUuidValue.of(organization.toJavaUUID()))
-
-            if (group != null) {
-                query.append(" AND grouping = :grouping")
-                params.add(ClickHouseUuidValue.of(group.toJavaUUID()))
+    ): T {
+        val query = StringBuilder(
+            when (operation) {
+                Operation.LIST -> "SELECT * FROM ${DatabaseManager.eventsTable}"
+                Operation.COUNT -> "SELECT count(*) FROM ${DatabaseManager.eventsTable}"
             }
+        )
 
-            if (filterEvents != null) {
-                query.append(" AND name in :name")
-                params.add(ClickHouseArrayValue.of(filterEvents.toTypedArray()))
-            }
+        query.append(" WHERE organization = :organization")
 
-            if (duringTime != null) {
-                val t1 = duringTime.first.toJavaLocalDateTime()
-                val t2 = duringTime.second.toJavaLocalDateTime()
-                query.append(" AND timestamp >= :t1 AND timestamp < :t2")
+        val params = arrayListOf<ClickHouseValue>(ClickHouseUuidValue.of(organization.toJavaUUID()))
 
-                println("Sorting by > $t1 and < $t2")
+        if (group != null) {
+            query.append(" AND group = :group")
+            params.add(ClickHouseUuidValue.of(group.toJavaUUID()))
+        }
 
-                params.add(ClickHouseDateTimeValue.of(t1, 3, JAVA_UTC_TIMEZONE).also { println("T1: $it") })
-                params.add(ClickHouseDateTimeValue.of(t2, 3, JAVA_UTC_TIMEZONE).also { println("T2: $it") })
-            }
+        if (filterTypes != null) {
+            query.append(" AND name in :name")
+            params.add(ClickHouseArrayValue.of(filterTypes.toTypedArray()))
+        }
 
-            query.append(" ORDER BY timestamp")
+        if (duringTime != null) {
+            val t1 = duringTime.first.toJavaLocalDateTime()
+            val t2 = duringTime.second.toJavaLocalDateTime()
+            query.append(" AND timestamp >= :t1 AND timestamp < :t2")
 
-            if (orderDescending) {
-                query.append(" DESC")
-            }
+            println("Sorting by > $t1 and < $t2")
 
-            if (limit != null) {
-                query.append(" LIMIT ${limit.first}, ${limit.second}")
-            }
+            params.add(ClickHouseDateTimeValue.of(t1, 3, JAVA_UTC_TIMEZONE).also { println("T1: $it") })
+            params.add(ClickHouseDateTimeValue.of(t2, 3, JAVA_UTC_TIMEZONE).also { println("T2: $it") })
+        }
 
-            println("QUERY: ${query.toString()}")
-            println("PARAMS: ${params.toString()}")
+        query.append(" ORDER BY timestamp")
 
+        if (orderDescending) {
+            query.append(" DESC")
+        }
+
+        if (limit != null) {
+            query.append(" LIMIT ${limit.first}, ${limit.second}")
+        }
+
+        println("QUERY: ${query.toString()}")
+        println("PARAMS: ${params.toString()}")
+
+        return ClickHouseClient.newInstance(ClickHouseProtocol.HTTP).use { client ->
             client.read(DatabaseManager.server)
                 .table(DatabaseManager.eventsTable)
                 .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
@@ -172,36 +169,30 @@ object EventService {
                     callback.invoke(response)
                 }
         }
+    }
 
     fun insertEvents(events: List<UsageEvent?>): ClickHouseResponseSummary? {
-        try {
-            ClickHouseClient.newInstance(DatabaseManager.server.protocol).use { client ->
-                val request = client.read(DatabaseManager.server).write().table(DatabaseManager.eventsTable)
-                    .options(DatabaseManager.insertProps)
-                    .format(ClickHouseFormat.RowBinary)
-                val config = request.config
-                var future: CompletableFuture<ClickHouseResponse>
-                ClickHouseDataStreamFactory.getInstance()
-                    .createPipedOutputStream(config, null as Runnable?).use { stream ->
-                        // in async mode, which is default, execution happens in a worker thread
-                        future = request.data(stream.inputStream).execute()
-                        events.forEach {
-                            it?.writeToClickhouse(stream)
-                        }
+        ClickHouseClient.newInstance(DatabaseManager.server.protocol).use { client ->
+            val request = client.read(DatabaseManager.server)
+                .write()
+                .table(DatabaseManager.eventsTable)
+                .options(DatabaseManager.insertProps)
+                .format(ClickHouseFormat.RowBinary)
+            val config = request.config
+            var future: CompletableFuture<ClickHouseResponse>
+            ClickHouseDataStreamFactory.getInstance()
+                .createPipedOutputStream(config, null as Runnable?).use { stream ->
+                    // in async mode, which is default, execution happens in a worker thread
+                    future = request.data(stream.inputStream).execute()
+                    events.forEach {
+                        it?.writeToClickhouse(stream)
                     }
-
-                future.get().use { response ->
-                    val summary = response.summary
-                    return summary
                 }
+
+            future.get().use { response ->
+                val summary = response.summary
+                return summary
             }
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            throw ClickHouseException.forCancellation(e, DatabaseManager.server)
-        } catch (e: ExecutionException) {
-            throw ClickHouseException.of(e, DatabaseManager.server)
-        } catch (e: IOException) {
-            throw ClickHouseException.of(e, DatabaseManager.server)
         }
     }
 

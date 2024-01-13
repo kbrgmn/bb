@@ -1,25 +1,20 @@
 package bms.usagebilling.service.events
 
 import bms.usagebilling.dateTimeExample
+import bms.usagebilling.db.get
 import bms.usagebilling.db.writeDateTime64
 import bms.usagebilling.db.writeString
 import bms.usagebilling.db.writeUuid
 import com.clickhouse.data.ClickHouseOutputStream
 import com.clickhouse.data.ClickHouseRecord
-import com.clickhouse.data.format.BinaryStreamUtils
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toJavaLocalDateTime
-import kotlinx.datetime.toJavaZoneId
 import kotlinx.datetime.toKotlinInstant
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
-import kotlinx.uuid.toJavaUUID
 import kotlinx.uuid.toKotlinUUID
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -28,10 +23,10 @@ data class InsertUsageEvent(
     /**
      * Ignored for InsertUsageEvent, taken from API key
      */
-    @EncodeDefault(EncodeDefault.Mode.NEVER) val orgId: UUID? = null, // IGNORED
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val organization: UUID? = null, // IGNORED
     val group: UUID? = null,
     val id: UUID? = UUID.generateUUID(),
-    val name: String,
+    val type: String,
     val timestamp: Instant? = Clock.System.now(),
     val billable: Boolean? = true,
     val reference: String? = "",
@@ -41,18 +36,18 @@ data class InsertUsageEvent(
         organization = organization,
         group = groupOverwrite ?: group ?: error("No project ID was set for event"),
         id = id ?: UUID.generateUUID(),
-        name = name,
+        type = type,
         timestamp = timestamp ?: Clock.System.now(),
         billable = billable ?: true,
         reference = reference ?: "",
         properties = properties ?: ""
     )
 
-     companion object {
+    companion object {
         val minimalExample = InsertUsageEvent(
             group = UUID.generateUUID(),
             id = null,
-            name = "WeatherForecast24hRequested",
+            type = "WeatherForecast24hRequested",
             timestamp = null,
             billable = null,
             reference = null,
@@ -61,7 +56,7 @@ data class InsertUsageEvent(
         val fullExample = InsertUsageEvent(
             group = UUID.generateUUID(),
             id = UUID.generateUUID(),
-            name = "WeatherForecast7dRequested",
+            type = "WeatherForecast7dRequested",
             timestamp = dateTimeExample(),
             billable = true,
             reference = "ipv4=198.51.100.2,apiKey=cde456",
@@ -75,7 +70,7 @@ data class UsageEvent(
     val organization: UUID,
     val group: UUID,
     val id: UUID = UUID.generateUUID(),
-    val name: String,
+    val type: String,
     val timestamp: Instant = Clock.System.now(),
     val billable: Boolean = true,
     val reference: String = "",
@@ -87,7 +82,7 @@ data class UsageEvent(
             writeUuid(group)
             writeUuid(id)
 
-            writeString(name)
+            writeString(type)
             writeDateTime64(timestamp)
             writeBoolean(billable)
 
@@ -101,7 +96,7 @@ data class UsageEvent(
             organization = UUID.generateUUID(),
             group = UUID.generateUUID(),
             id = UUID.generateUUID(),
-            name = "WeatherForecast24hRequested",
+            type = "WeatherForecast24hRequested",
             timestamp = dateTimeExample(),
             reference = "ipv4=198.51.100.1,apiKey=apiKeyAbc123",
         )
@@ -109,7 +104,7 @@ data class UsageEvent(
             organization = UUID.generateUUID(),
             group = UUID.generateUUID(),
             id = UUID.generateUUID(),
-            name = "WeatherForecast7dRequested",
+            type = "WeatherForecast7dRequested",
             timestamp = dateTimeExample(),
             billable = true,
             reference = "ipv4=198.51.100.2,apiKey=cde456",
@@ -117,17 +112,15 @@ data class UsageEvent(
         )
 
 
-        fun fromClickhouseRecord(record: ClickHouseRecord): UsageEvent {
-            return UsageEvent(
-                organization = record.getValue(0).asUuid().toKotlinUUID(),
-                group = record.getValue(1).asUuid().toKotlinUUID(),
-                id = record.getValue(2).asUuid().toKotlinUUID(),
-                name = record.getValue(3).asString(),
-                timestamp = record.getValue(4).asInstant(3).toKotlinInstant(),
-                billable = record.getValue(5).asBoolean(),
-                reference = record.getValue(6).asString(),
-                properties = record.getValue(7).asString()
-            )
-        }
+        fun fromClickhouseRecord(record: ClickHouseRecord) = UsageEvent(
+            organization = record[0].asUuid().toKotlinUUID(),
+            group = record[1].asUuid().toKotlinUUID(),
+            id = record[2].asUuid().toKotlinUUID(),
+            type = record[3].asString(),
+            timestamp = record[4].asInstant(3).toKotlinInstant(),
+            billable = record[5].asBoolean(),
+            reference = record[6].asString(),
+            properties = record[7].asString()
+        )
     }
 }

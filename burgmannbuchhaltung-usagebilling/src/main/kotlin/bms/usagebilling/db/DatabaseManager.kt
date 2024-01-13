@@ -2,6 +2,7 @@ package bms.usagebilling.db
 
 import bms.usagebilling.service.events.EventService
 import bms.usagebilling.service.events.UsageEvent
+import com.clickhouse.client.ClickHouseConfig
 import com.clickhouse.client.ClickHouseNode
 import com.clickhouse.client.http.config.ClickHouseHttpOption
 import kotlinx.datetime.Clock
@@ -22,6 +23,8 @@ object DatabaseManager {
 
     val eventsTable = "events"
     val resourcesTable = "resources"
+
+    val config = ClickHouseConfig()
 
     val insertProps = Properties().apply {
         setProperty(
@@ -81,7 +84,7 @@ fun main() {
                         group = projectId,
                         id = UUID.generateUUID(),
                         timestamp = Clock.System.now(),
-                        name = eventNames.random(),
+                        type = eventNames.random(),
                         billable = true,
                         reference = "",
                         properties = """{"issued": "value${Random.nextInt()}"}"""

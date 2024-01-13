@@ -158,9 +158,9 @@ private fun Route.billingUsageRoutes() {
         val orderDescending = queryParams["orderDescending"]?.let { it.toBoolean() } ?: false
 
         val events = EventService.listEvents(
-            organizationId = callAuth.organizationId,
-            projectId = projectId,
-            filterEvents = filterEvents,
+            organization = callAuth.organizationId,
+            group = projectId,
+            filterType = filterEvents,
             limit = limit,
             duringTime = duringTime,
             orderDescending = orderDescending
@@ -269,11 +269,11 @@ private fun Route.billingUsageRoutes() {
             }.open(stream) {
                 userProvidedEvents = readAllWithHeaderAsSequence().map { row ->
                     InsertUsageEvent(
-                        orgId = callAuth.organizationId,
+                        organization = callAuth.organizationId,
                         group = UUID(row["projectId"] ?: missingFromEntry("Project id", row)),
                         id = UUID(row["eventId"] ?: missingFromEntry("Event id", row)),
                         timestamp = Instant.parse(row["timestamp"] ?: missingFromEntry("Timestamp", row)),
-                        name = row["eventName"] ?: missingFromEntry("Event name", row),
+                        type = row["eventName"] ?: missingFromEntry("Event name", row),
                         billable = row["isBillable"]?.toBooleanStrictOrNull() ?: true,
                         reference = row["reference"],
                         properties = row["properties"]
