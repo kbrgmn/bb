@@ -11,7 +11,7 @@ create or replace table events
     properties   String
 )
     engine = ReplacingMergeTree
-        PRIMARY KEY (organization, group, id)
+        PRIMARY KEY (organization, group)
         ORDER BY (organization, group, id)
 ;
 
@@ -29,7 +29,7 @@ create or replace table resources
     properties   String
 )
     engine = ReplacingMergeTree
-        PRIMARY KEY (organization, group, id)
+        PRIMARY KEY (organization, group)
         ORDER BY (organization, group, id)
 ;
 
