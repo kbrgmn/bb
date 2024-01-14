@@ -1,4 +1,4 @@
-package bms.usagebilling.web
+package bms.usagebilling.web.config
 
 import com.github.ricky12awesome.jss.encodeToSchema
 import io.github.smiley4.ktorswaggerui.SwaggerUI
@@ -7,7 +7,6 @@ import io.github.smiley4.ktorswaggerui.data.AuthType
 import io.github.smiley4.ktorswaggerui.data.EncodingData
 import io.github.smiley4.ktorswaggerui.dsl.getTypeName
 import io.ktor.server.application.*
-import io.ktor.util.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import kotlin.io.path.Path

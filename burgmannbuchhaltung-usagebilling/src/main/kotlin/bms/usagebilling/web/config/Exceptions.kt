@@ -1,4 +1,4 @@
-package bms.usagebilling.web
+package bms.usagebilling.web.config
 
 import io.ktor.http.*
 import io.ktor.server.application.*

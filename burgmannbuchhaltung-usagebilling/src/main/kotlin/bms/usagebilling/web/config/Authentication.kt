@@ -1,4 +1,4 @@
-package bms.usagebilling.web
+package bms.usagebilling.web.config
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm

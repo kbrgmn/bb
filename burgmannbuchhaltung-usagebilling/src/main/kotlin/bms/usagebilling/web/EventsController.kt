@@ -1,11 +1,11 @@
-package bms.usagebilling
+package bms.usagebilling.web
 
 import bms.usagebilling.service.events.EventService
 import bms.usagebilling.service.events.InsertUsageEvent
 import bms.usagebilling.service.events.UsageEvent
-import bms.usagebilling.web.CallAuthentication.Companion.authorizationFromCall
-import bms.usagebilling.web.UnauthorizedException
-import bms.usagebilling.web.illegalArgument
+import bms.usagebilling.web.config.CallAuthentication.Companion.authorizationFromCall
+import bms.usagebilling.web.config.UnauthorizedException
+import bms.usagebilling.web.config.illegalArgument
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import io.github.smiley4.ktorswaggerui.dsl.get
 import io.github.smiley4.ktorswaggerui.dsl.post

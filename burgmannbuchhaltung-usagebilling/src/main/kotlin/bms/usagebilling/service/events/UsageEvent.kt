@@ -1,6 +1,6 @@
 package bms.usagebilling.service.events
 
-import bms.usagebilling.dateTimeExample
+import bms.usagebilling.web.dateTimeExample
 import bms.usagebilling.db.get
 import bms.usagebilling.db.writeDateTime64
 import bms.usagebilling.db.writeString

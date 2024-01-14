@@ -2,7 +2,6 @@ package bms.usagebilling.service.events
 
 import bms.usagebilling.db.ClickhouseOptions
 import bms.usagebilling.db.DatabaseManager
-import bms.usagebilling.db.DatabaseManager.customOptions
 import bms.usagebilling.db.DatabaseManager.customOptionsArray
 import bms.usagebilling.db.JAVA_UTC_TIMEZONE
 import com.clickhouse.client.ClickHouseClient
@@ -57,14 +56,27 @@ object EventService {
         resp
     }
 
-    fun checkDatabaseStatus() = runCatching {
+    fun checkDatabaseConnectionStatus() = runCatching {
         ClickHouseClient.newInstance().use { client ->
             client.read(DatabaseManager.server)
                 .table(DatabaseManager.eventsTable)
                 .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
                 .query("select 1")
                 .executeAndWait().use {
-                    it.firstRecord().getValue(0).asInteger() == 0
+                    it.firstRecord().getValue(0).asInteger() == 1
+                }
+        }
+    }
+
+    fun checkDatabaseTableStatus() = runCatching {
+        ClickHouseClient.newInstance().use { client ->
+            client.read(DatabaseManager.server)
+                .table(DatabaseManager.eventsTable)
+                .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+                .query("select * from events limit 1")
+                .executeAndWait().use {
+                    println("Read for statistics: " + it.summary.readRows)
+                    it.records().map { UsageEvent.fromClickhouseRecord(it) }.size in 0..1
                 }
         }
     }

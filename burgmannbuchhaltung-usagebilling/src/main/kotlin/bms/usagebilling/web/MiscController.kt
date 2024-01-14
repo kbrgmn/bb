@@ -1,6 +1,7 @@
-package bms.usagebilling
+package bms.usagebilling.web
 
-import bms.usagebilling.web.UnauthorizedException
+import bms.usagebilling.service.events.EventService
+import bms.usagebilling.web.config.UnauthorizedException
 import io.github.smiley4.ktorswaggerui.dsl.get
 import io.github.smiley4.ktorswaggerui.dsl.route
 import io.ktor.http.*
@@ -11,6 +12,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
 @SerialName("ApiKeyReadableInformation")
@@ -69,7 +72,16 @@ fun Application.misc() {
                     }
                 }
             }) {
+                fun Result<Boolean>.isBoolTrue(): Boolean = this.getOrElse { it.printStackTrace(); false }
 
+                val statuses = mapOf(
+                    "web" to true,
+                    "db-cluster" to EventService.checkDatabaseConnectionStatus().isBoolTrue(),
+                    "db-data" to EventService.checkDatabaseTableStatus().isBoolTrue()
+                )
+                val status = if (statuses.values.all { it }) HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable
+
+                context.respond(status, JsonObject(statuses.mapValues { JsonPrimitive(it.value) }))
             }
         }
     }
