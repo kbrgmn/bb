@@ -4,6 +4,7 @@ import bms.usagebilling.service.events.EventService
 import bms.usagebilling.service.events.UsageEvent
 import com.clickhouse.client.ClickHouseConfig
 import com.clickhouse.client.ClickHouseNode
+import com.clickhouse.client.ClickHouseRequest
 import com.clickhouse.client.http.config.ClickHouseHttpOption
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
@@ -26,12 +27,12 @@ object DatabaseManager {
 
     val config = ClickHouseConfig()
 
-    val insertProps = Properties().apply {
-        setProperty(
-            ClickHouseHttpOption.CUSTOM_PARAMS.key,
-            "async_insert=1,wait_for_async_insert=1" // wait_for_async_insert is enabled
-        )
-    }
+
+
+    fun ClickHouseRequest.Mutation.customOptionsArray(options: Array<out String>): ClickHouseRequest.Mutation = option(ClickHouseHttpOption.CUSTOM_PARAMS,
+        options.joinToString(",")
+    )
+    fun ClickHouseRequest.Mutation.customOptions(vararg options: String) = customOptionsArray(options)
 
     /*val servers = ClickHouseNodes.of(
        "jdbc:ch:http://${hosts.joinToString(",")}/$db" // jdbc:ch: prefix breaks?
@@ -40,6 +41,7 @@ object DatabaseManager {
 
     val server = ClickHouseNode.of("http://${hosts.first()}/$db")
 }
+
 
 
 fun main() {

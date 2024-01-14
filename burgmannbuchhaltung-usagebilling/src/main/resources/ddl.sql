@@ -1,3 +1,4 @@
+drop table if exists events sync;
 create or replace table events
 (
     organization UUID,
@@ -14,6 +15,7 @@ create or replace table events
         ORDER BY (organization, group, id)
 ;
 
+drop table if exists resources sync;
 create or replace table resources
 (
     organization UUID,

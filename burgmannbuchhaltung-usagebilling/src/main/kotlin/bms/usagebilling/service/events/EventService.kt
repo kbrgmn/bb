@@ -1,6 +1,9 @@
 package bms.usagebilling.service.events
 
+import bms.usagebilling.db.ClickhouseOptions
 import bms.usagebilling.db.DatabaseManager
+import bms.usagebilling.db.DatabaseManager.customOptions
+import bms.usagebilling.db.DatabaseManager.customOptionsArray
 import bms.usagebilling.db.JAVA_UTC_TIMEZONE
 import com.clickhouse.client.ClickHouseClient
 import com.clickhouse.client.ClickHouseProtocol
@@ -176,7 +179,7 @@ object EventService {
             val request = client.read(DatabaseManager.server)
                 .write()
                 .table(DatabaseManager.eventsTable)
-                .options(DatabaseManager.insertProps)
+                .customOptionsArray(ClickhouseOptions.asyncInsertNoWaitOptions)
                 .format(ClickHouseFormat.RowBinary)
             val config = request.config
             var future: CompletableFuture<ClickHouseResponse>
