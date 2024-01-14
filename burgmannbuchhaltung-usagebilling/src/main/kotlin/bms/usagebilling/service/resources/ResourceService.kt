@@ -25,8 +25,7 @@ object ResourceService {
         wait: Boolean = false
     ): ClickHouseResponseSummary {
         ClickHouseClient.newInstance(DatabaseManager.server.protocol).use { client ->
-            val request = client.read(DatabaseManager.server)
-                .write()
+            val request = client.write(DatabaseManager.server)
                 .table(DatabaseManager.resourcesTable)
                 .customOptionsArray(if (wait) asyncInsertWaitOptions else asyncInsertNoWaitOptions)
                 .format(ClickHouseFormat.RowBinary)

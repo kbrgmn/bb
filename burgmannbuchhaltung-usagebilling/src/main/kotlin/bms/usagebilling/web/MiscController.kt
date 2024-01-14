@@ -19,7 +19,7 @@ import kotlinx.serialization.json.JsonPrimitive
 @SerialName("ApiKeyReadableInformation")
 data class ApiKeyReadableInformation(
     @SerialName("API key is for organization") val organization: String,
-    @SerialName("API key is locked to project") val project: String,
+    @SerialName("API key is locked to group") val group: String,
     @SerialName("API key was issued by") val issuer: String,
     @SerialName("API key is intended for") val audience: List<String>,
     @SerialName("API key was issued on") val issuedAt: String,
@@ -45,7 +45,7 @@ fun Application.misc() {
                     call.respond(
                         ApiKeyReadableInformation(
                             organization = principal.subject!!,
-                            project = principal["project"] ?: "None - not bound to any project",
+                            group = principal["group"] ?: "None - not bound to any group",
                             issuer = when (principal.issuer) {
                                 "BBB" -> "BurgmannBuchhaltung Primary Service"
                                 else -> principal.issuer
@@ -68,7 +68,12 @@ fun Application.misc() {
                 summary = "Displays the services operational status."
                 response {
                     HttpStatusCode.OK to {
-                        body<Unit>()
+                        body<Map<String, Boolean>>()
+                        description = "Service self-check OK"
+                    }
+                    HttpStatusCode.ServiceUnavailable to {
+                        body<Map<String, Boolean>>()
+                        description = "Service self-check failed - Service unavailable"
                     }
                 }
             }) {

@@ -82,16 +82,16 @@ object EventService {
     }
 
     fun countEvents(
-        organizationId: UUID,
-        projectId: UUID? = null,
-        filterEvents: List<String>? = null,
+        organization: UUID,
+        group: UUID? = null,
+        filterTypes: List<String>? = null,
         limit: Pair<Int, Int>? = null,
         duringTime: Pair<LocalDateTime, LocalDateTime>? = null,
     ) = doQuery(
         operation = Operation.COUNT,
-        organization = organizationId,
-        group = projectId,
-        filterTypes = filterEvents,
+        organization = organization,
+        group = group,
+        filterTypes = filterTypes,
         limit = limit,
         duringTime = duringTime,
         orderDescending = false
@@ -113,7 +113,7 @@ object EventService {
 
     /**
      * @param organization: required - organization to show
-     * @param group: optional - project to show
+     * @param group: optional - group to show
      * @param filterTypes: optional - list of accepted event types
      * @param limit: optional - int to skip & int to limit
      * @param duringTime: optional - timestamp (in UTC!) to begin filter and timestamp (in UTC!) to end filter
@@ -188,8 +188,7 @@ object EventService {
 
     fun insertEvents(events: List<UsageEvent?>): ClickHouseResponseSummary? {
         ClickHouseClient.newInstance(DatabaseManager.server.protocol).use { client ->
-            val request = client.read(DatabaseManager.server)
-                .write()
+            val request = client.write(DatabaseManager.server)
                 .table(DatabaseManager.eventsTable)
                 .customOptionsArray(ClickhouseOptions.asyncInsertNoWaitOptions)
                 .format(ClickHouseFormat.RowBinary)

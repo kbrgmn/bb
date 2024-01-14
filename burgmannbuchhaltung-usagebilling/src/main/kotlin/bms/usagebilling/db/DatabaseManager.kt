@@ -10,7 +10,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
-import java.util.Properties
 import kotlin.random.Random
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
@@ -47,7 +46,7 @@ object DatabaseManager {
 fun main() {
     /*
      orgId UUID
-     projectId UUID
+     groupId UUID
      eventId UUID
      timestamp Instant
      eventName String
@@ -55,9 +54,9 @@ fun main() {
      */
 
     val orgId = UUID("e1a2c0be-82e3-4e58-bd97-3c133e6d2fdc")
-    //val projectId = UUID("6d595ce8-4226-4b9c-bbdf-a1a329093ebe")
+    //val groupId = UUID("6d595ce8-4226-4b9c-bbdf-a1a329093ebe")
 
-    val projectId = UUID("e1a2c0be-82e3-4e58-bd97-3c133e6d2fdc")
+    val groupId = UUID("e1a2c0be-82e3-4e58-bd97-3c133e6d2fdc")
 
     val eventNames = listOf("Issuance", "Verification")
 
@@ -66,9 +65,9 @@ fun main() {
         LocalDateTime(2024, 1, 6, 3, 29, 1, 400*1000*1000),
     )
 
-    EventService.listEvents(orgId, projectId, null, Pair(0, 1))
+    EventService.listEvents(orgId, groupId, null, Pair(0, 1))
     val eventRead = measureTimedValue {
-        EventService.listEvents(orgId, projectId, null, limit = Pair(0, 500), orderDescending = true)
+        EventService.listEvents(orgId, groupId, null, limit = Pair(0, 500), orderDescending = true)
     }
     eventRead.value.forEach {
         println(it)
@@ -83,7 +82,7 @@ fun main() {
                 events.add(
                     UsageEvent(
                         organization = orgId,
-                        group = projectId,
+                        group = groupId,
                         id = UUID.generateUUID(),
                         timestamp = Clock.System.now(),
                         type = eventNames.random(),

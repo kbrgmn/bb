@@ -12,16 +12,16 @@ import kotlinx.uuid.UUID
 
 data class CallAuthentication(
     val organizationId: UUID,
-    val allowedProjectId: UUID?
+    val allowedGroupId: UUID?
 ) {
 
     companion object {
         fun PipelineContext<Unit, ApplicationCall>.authorizationFromCall(): CallAuthentication {
             val auth = call.principal<JWTPrincipal>() ?: error("No JWT principal")
             val orgId = UUID(auth.subject ?: error("No orgId"))
-            val projectId = auth["project"]?.let { UUID(it) }
+            val groupId = auth["group"]?.let { UUID(it) }
 
-            return CallAuthentication(orgId, projectId)
+            return CallAuthentication(orgId, groupId)
         }
     }
 }

@@ -27,7 +27,7 @@ dependencies {
     implementation("io.ktor:ktor-server-sessions-jvm:2.3.7")
     implementation("io.ktor:ktor-server-auth-jwt:2.3.7")
     implementation("io.ktor:ktor-server-auto-head-response:2.3.7")
-    implementation("io.ktor:ktor-server-double-receive:2.3.7")
+    //implementation("io.ktor:ktor-server-double-receive:2.3.7")
     implementation("io.ktor:ktor-server-host-common-jvm:2.3.7")
     implementation("io.ktor:ktor-server-status-pages:2.3.7")
     implementation("io.ktor:ktor-server-forwarded-header:2.3.7")

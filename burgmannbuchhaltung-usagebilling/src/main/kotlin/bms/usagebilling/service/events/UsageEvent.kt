@@ -34,7 +34,7 @@ data class InsertUsageEvent(
 ) {
     fun toNormalUsageEvent(organization: UUID, groupOverwrite: UUID? = null) = UsageEvent(
         organization = organization,
-        group = groupOverwrite ?: group ?: error("No project ID was set for event"),
+        group = groupOverwrite ?: group ?: error("No group ID was set for event"),
         id = id ?: UUID.generateUUID(),
         type = type,
         timestamp = timestamp ?: Clock.System.now(),

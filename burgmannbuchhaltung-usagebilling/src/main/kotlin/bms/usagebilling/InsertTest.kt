@@ -14,7 +14,7 @@ import kotlinx.uuid.generateUUID
 import kotlin.time.measureTime
 
 suspend fun main() {
-    val projectId = UUID.generateUUID()
+    val groupId = UUID.generateUUID()
     val apiToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMWEyYzBiZS04MmUzLTRlNTgtYmQ5Ny0zYzEzM2U2ZDJmZGMiLCJpYXQiOjE3MDQ2NzQzNjUsImlzcyI6IkJCQiIsImF1ZCI6IlVCUyJ9.zHXpWWjSJ8ifPVTSQqN6QGd7X8w4Yz1EZQ28FnDc7yc"
 
     val http = HttpClient(CIO) {
@@ -33,7 +33,7 @@ suspend fun main() {
         val t = Clock.System.now()
         val eventNames = listOf("WeatherForecast24h", "WeatherForecast7d", "WeatherForecast30d")
 
-        val jsonValues = (0 until 1000).map { InsertUsageEvent(group = projectId, id = UUID.generateUUID(), timestamp = t, type = eventNames.random(), reference = "JSON $idx") }
+        val jsonValues = (0 until 1000).map { InsertUsageEvent(group = groupId, id = UUID.generateUUID(), timestamp = t, type = eventNames.random(), reference = "JSON $idx") }
 
         measureTime {
             http.post("http://localhost:8080/usage-billing/push/json") {
@@ -44,8 +44,8 @@ suspend fun main() {
 
         Thread.sleep(500)
 
-        val csvValues = "projectId;eventId;timestamp;eventName;isBillable;reference;properties" + (0..1000).map {
-            "$projectId;${UUID.generateUUID()};$t;${eventNames.random()};true;CSV $idx;"
+        val csvValues = "groupId;eventId;timestamp;eventName;isBillable;reference;properties" + (0..1000).map {
+            "$groupId;${UUID.generateUUID()};$t;${eventNames.random()};true;CSV $idx;"
         }.joinToString("\n")
 
         measureTime {

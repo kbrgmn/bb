@@ -92,7 +92,6 @@ object Tests {
     fun lotsOfResources() = measureTime {
         val org = UUID.generateUUID()
         val group = UUID.generateUUID()
-
         val c = Clock.System
 
         val resources = measureTimedValue {
@@ -121,6 +120,6 @@ object Tests {
 }
 
 @Suppress("RedundantSuspendModifier")
-suspend fun main() {
-    // put tests here
+suspend fun main() = Tests.run {
+    testResourceClosing()
 }

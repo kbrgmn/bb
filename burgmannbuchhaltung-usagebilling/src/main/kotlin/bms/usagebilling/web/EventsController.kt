@@ -59,38 +59,38 @@ data class PushResult(val eventsWritten: Long, val totalBytes: Long, val eventsO
 
 private fun Route.billingUsageRoutes() {
 
-    fun PipelineContext<Unit, ApplicationCall>.getProjectId(): UUID? {
-        val requestedProjectIdString = queryParams()["project"]
-            ?.let { runCatching { UUID(it) }.getOrElse { illegalArgument("Invalid project uuid: ${it.message}") } }
+    fun PipelineContext<Unit, ApplicationCall>.getGroupId(): UUID? {
+        val requestedGroupIdString = queryParams()["group"]
+            ?.let { runCatching { UUID(it) }.getOrElse { illegalArgument("Invalid group uuid: ${it.message}") } }
 
         val callAuth = authorizationFromCall()
-        val projectId = when {
-            callAuth.allowedProjectId == null && requestedProjectIdString == null -> null
-            callAuth.allowedProjectId != null && requestedProjectIdString == null ->
-                throw UnauthorizedException("Filter was not restricted to any project (all projects were requested), but API key is locked to project: ${callAuth.allowedProjectId}")
+        val groupId = when {
+            callAuth.allowedGroupId == null && requestedGroupIdString == null -> null
+            callAuth.allowedGroupId != null && requestedGroupIdString == null ->
+                throw UnauthorizedException("Filter was not restricted to any group (all groups were requested), but API key is locked to group: ${callAuth.allowedGroupId}")
 
-            callAuth.allowedProjectId == requestedProjectIdString -> callAuth.allowedProjectId
-            callAuth.allowedProjectId == null -> requestedProjectIdString
-            else -> error("Could not determine project id")
+            callAuth.allowedGroupId == requestedGroupIdString -> callAuth.allowedGroupId
+            callAuth.allowedGroupId == null -> requestedGroupIdString
+            else -> error("Could not determine group id")
         }
 
-        return projectId
+        return groupId
     }
 
     get("query", {
-        summary = "Query the organization or the project of the organization for a list of events, " +
+        summary = "Query the organization or the group of the organization for a list of events, " +
                 "optionally specify certain filters."
         description = """
             List all events of this organization that match a provided query.
             You can query by setting various filters as listed below.
             If you do not set a filter, the list will be unfiltered - thus all recorded events are returned.
             The default limit set is 1000 events per request. You can set an offset (to get the next 1000 events) with the `limit` filter.
-            It is required to set the `project` filter if the API key is locked to an specific project. If the API key is not locked to a specific project, you are allowed to leave `project` empty, and thus query all events over all projects of the organization.
+            It is required to set the `group` filter if the API key is locked to an specific group. If the API key is not locked to a specific group, you are allowed to leave `group` empty, and thus query all events over all groups of the organization.
             """.trimIndent()
         request {
-            queryParameter<String?>("project") {
+            queryParameter<String?>("group") {
                 description =
-                    "The `project` ID to filter by. Will list all projects if not set. If the API key is locked to a project, has to be set to that project."
+                    "The `group` ID to filter by. Will list all groups if not set. If the API key is locked to a group, has to be set to that group."
                 example = UUID.generateUUID().toString()
             }
             queryParameter<Array<String>?>("filterEvents") {
@@ -133,7 +133,7 @@ private fun Route.billingUsageRoutes() {
         val callAuth = authorizationFromCall()
         val queryParams = queryParams()
 
-        val projectId = getProjectId()
+        val groupId = getGroupId()
 
         val filterEvents = queryParams.getAll("filterEvents")?.apply {
             require(size <= 99) { "Filtered for too many events, max. 99 types" }
@@ -159,7 +159,7 @@ private fun Route.billingUsageRoutes() {
 
         val events = EventService.listEvents(
             organization = callAuth.organizationId,
-            group = projectId,
+            group = groupId,
             filterType = filterEvents,
             limit = limit,
             duringTime = duringTime,
@@ -174,20 +174,20 @@ private fun Route.billingUsageRoutes() {
         description = """
             Push a new block of events to the store.
             The organization ID for the events will be automatically determined by the API token.
-            If the API token is locked to an specific project, the events will be checked to also be associated with that project.
+            If the API token is locked to an specific group, the events will be checked to also be associated with that group.
         """.trimIndent()
     }) {
 
         suspend fun PipelineContext<Unit, ApplicationCall>.processEvents(userProvidedEvents: List<InsertUsageEvent>) {
             val callAuth = authorizationFromCall()
-            if (callAuth.allowedProjectId != null) {
-                require(userProvidedEvents.all { it.group == callAuth.allowedProjectId || it.group == null }) { "An invalid project id was set with an event. This API key is only allowed to process project: ${callAuth.allowedProjectId}" }
+            if (callAuth.allowedGroupId != null) {
+                require(userProvidedEvents.all { it.group == callAuth.allowedGroupId || it.group == null }) { "An invalid group id was set with an event. This API key is only allowed to process group: ${callAuth.allowedGroupId}" }
             }
 
             val eventsToInsert = userProvidedEvents.map {
                 runCatching {
-                    if (it.group == null && callAuth.allowedProjectId != null) {
-                        it.toNormalUsageEvent(callAuth.organizationId, callAuth.allowedProjectId)
+                    if (it.group == null && callAuth.allowedGroupId != null) {
+                        it.toNormalUsageEvent(callAuth.organizationId, callAuth.allowedGroupId)
                     } else it.toNormalUsageEvent(callAuth.organizationId)
                 }.getOrNull()
             }
@@ -206,6 +206,7 @@ private fun Route.billingUsageRoutes() {
                     totalBytes = result?.writtenBytes ?: -1
                 )
             )
+
         }
 
 
@@ -221,7 +222,6 @@ private fun Route.billingUsageRoutes() {
                 }
             }
         }) {
-            val callAuth = authorizationFromCall()
             val userProvidedEvents = call.receive<List<InsertUsageEvent>>()
 
             processEvents(userProvidedEvents)
@@ -231,12 +231,12 @@ private fun Route.billingUsageRoutes() {
             description = """
             Push a new block of events to the store.
             The organization ID for the events will be automatically determined by the API token.
-            If the API token is locked to an specific project, the events will be checked to also be associated with that project.
-            The CSV file is read with the charset UTF-8, the quote character is '"', the escape sequence is the backward slash (\), delimiter is the tab character (\t) by default - this can be configured in the header to be e.g. ',' or ';'.
+            If the API token is locked to an specific group, the events will be checked to also be associated with that group.
+            The CSV file is read with the charset UTF-8, the quote character is '"', the escape sequence is the backward slash (\), delimiter is the tab character (\t) by default - this can be configured in the query to be e.g. ',' or ';'.
         """.trimIndent()
 
             request {
-                headerParameter<String>("delimiter") {
+                queryParameter<String>("delimiter") {
                     required = false
                     example = ";"
                     description = """Delimiter character to use for the CSV input, by default the tab character (\t)"""
@@ -244,7 +244,7 @@ private fun Route.billingUsageRoutes() {
                 body<String> {
                     example(
                         "CSV example (semicolon seperated)", """
-                        projectId;eventId;timestamp;eventName;isBillable;reference;properties
+                        group;event;timestamp;type;billable;reference;properties
                         ${UUID.generateUUID()};${UUID.generateUUID()};${dateTimeExample()};WeatherForecast24hRequested;true;api1-key,127.0.0.100;{"key1": "value1"}
                         ${UUID.generateUUID()};${UUID.generateUUID()};${dateTimeExample()};WeatherForecast30dRequested;true;api2-key,127.0.0.200;{"key2": "value2"}
                     """.trimIndent()
@@ -255,7 +255,7 @@ private fun Route.billingUsageRoutes() {
             val callAuth = authorizationFromCall()
 
             val stream = call.receiveStream()
-            val delimiterParam = call.request.header("delimiter")?.firstOrNull()
+            val delimiterParam = call.request.queryParameters["delimiter"]?.firstOrNull() ?: '\t'
 
             fun missingFromEntry(what: String, row: Map<String, String>): Nothing =
                 error("$what is missing from entry: $row")
@@ -264,17 +264,17 @@ private fun Route.billingUsageRoutes() {
 
             csvReader {
                 skipEmptyLine = true
-                delimiter = delimiterParam ?: '\t'
+                delimiter = delimiterParam
                 escapeChar = '\\'
-            }.open(stream) {
+            }.openAsync(stream) {
                 userProvidedEvents = readAllWithHeaderAsSequence().map { row ->
                     InsertUsageEvent(
                         organization = callAuth.organizationId,
-                        group = UUID(row["projectId"] ?: missingFromEntry("Project id", row)),
-                        id = UUID(row["eventId"] ?: missingFromEntry("Event id", row)),
+                        group = UUID(row["group"] ?: missingFromEntry("Group id", row)),
+                        id = UUID(row["event"] ?: missingFromEntry("Event id", row)),
                         timestamp = Instant.parse(row["timestamp"] ?: missingFromEntry("Timestamp", row)),
-                        type = row["eventName"] ?: missingFromEntry("Event name", row),
-                        billable = row["isBillable"]?.toBooleanStrictOrNull() ?: true,
+                        type = row["type"] ?: missingFromEntry("Event name", row),
+                        billable = row["billable"]?.toBooleanStrictOrNull() ?: true,
                         reference = row["reference"],
                         properties = row["properties"]
                     )
