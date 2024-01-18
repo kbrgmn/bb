@@ -1,9 +1,17 @@
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+
 plugins {
     kotlin("jvm") version "1.9.22"
     id("io.ktor.plugin") version "2.3.7"
     kotlin("plugin.serialization") version "1.9.22"
 
-    id("com.github.ben-manes.versions") version "0.48.0"
+    id("com.github.ben-manes.versions") version "0.50.0"
+}
+
+tasks.withType<DependencyUpdatesTask> {
+    rejectVersionIf {
+        listOf("beta", "alpha", "-rc").any { candidate.version.lowercase().contains(it) }
+    }
 }
 
 group = "usagebilling.bms"
@@ -45,7 +53,7 @@ dependencies {
     // -- TESTING END
 
     // Ktor server external libs
-    implementation("io.github.smiley4:ktor-swagger-ui:2.7.3")
+    implementation("io.github.smiley4:ktor-swagger-ui:2.7.4")
     implementation("com.github.Ricky12Awesome:json-schema-serialization:0.9.9")
 
     // Coroutines
@@ -58,14 +66,22 @@ dependencies {
 
     implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2")
 
-    // DB
-    implementation("com.clickhouse:clickhouse-http-client:0.5.0")
-    implementation("org.apache.httpcomponents.client5:httpclient5:5.2.3")
+    // -- DB --
+
+    // Clickhouse
+    implementation("com.clickhouse:clickhouse-http-client:0.6.0")
+    implementation("org.apache.httpcomponents.client5:httpclient5:5.3")
     implementation("org.lz4:lz4-java:1.8.0")
 
+    // InfluxDB
+    implementation("com.influxdb:influxdb-client-kotlin:6.12.0")
+
+    // Redis
+    //implementation("")
+
     // Logging
-    implementation("io.github.oshai:kotlin-logging:6.0.1")
-    implementation("org.slf4j:slf4j-simple:2.0.9")
+    implementation("io.github.oshai:kotlin-logging:6.0.3")
+    implementation("org.slf4j:slf4j-simple:2.0.11")
     implementation("io.ktor:ktor-server-auth-jvm:2.3.7")
     implementation("io.ktor:ktor-server-auth-jwt-jvm:2.3.7")
     implementation("io.ktor:ktor-server-call-logging-jvm:2.3.7")
@@ -73,6 +89,6 @@ dependencies {
     implementation("io.ktor:ktor-client-cio-jvm:2.3.7")
 
     // Tests
-    testImplementation("io.ktor:ktor-server-tests-jvm")
+    testImplementation("io.ktor:ktor-server-tests-jvm:2.3.7")
     //testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

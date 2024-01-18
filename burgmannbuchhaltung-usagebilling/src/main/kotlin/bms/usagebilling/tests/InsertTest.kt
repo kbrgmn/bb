@@ -1,4 +1,4 @@
-package bms.usagebilling
+package bms.usagebilling.tests
 
 import bms.usagebilling.service.events.InsertUsageEvent
 import io.ktor.client.*
@@ -13,7 +13,7 @@ import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
 import kotlin.time.measureTime
 
-suspend fun main() {
+suspend fun main2() {
     val groupId = UUID.generateUUID()
     val apiToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMWEyYzBiZS04MmUzLTRlNTgtYmQ5Ny0zYzEzM2U2ZDJmZGMiLCJpYXQiOjE3MDQ2NzQzNjUsImlzcyI6IkJCQiIsImF1ZCI6IlVCUyJ9.zHXpWWjSJ8ifPVTSQqN6QGd7X8w4Yz1EZQ28FnDc7yc"
 

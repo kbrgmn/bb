@@ -22,7 +22,7 @@ fun Application.configureOpenApi() {
 
         encoding {
             exampleEncoder { type, example ->
-                //println("Encoding: ${type} ($example)")
+                //println("Encoding examples: ${type} ($example)")
 
                 if (type?.getTypeName()?.contains("bms.usagebilling") == true) {
                     json.encodeToString(serializer(type), example)
@@ -31,6 +31,8 @@ fun Application.configureOpenApi() {
                 }
             }
             schemaEncoder { type ->
+//                println("Encoding schema: $type")
+
                 if (type.getTypeName().contains("bms.usagebilling")) {
                     json.encodeToSchema(serializer(type), generateDefinitions = false)
                     //.also { println("KOTLIN SCHEMA FOR: $typeName = $it") }

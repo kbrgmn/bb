@@ -1,4 +1,4 @@
-package bms.usagebilling
+package bms.usagebilling.tests
 
 import bms.usagebilling.service.resources.ResourceService
 import bms.usagebilling.service.resources.UsageEndResource
@@ -18,29 +18,41 @@ object Tests {
     suspend fun testLotsOfSingleResourceInserts() {
         println("Creating resources...")
 
+        val x = measureTimedValue {
+            Array(100) {
+                Array(1000) {
+                    UsageResource(
+                        UUID.generateUUID(),
+                        UUID.generateUUID(),
+                        UUID.generateUUID(),
+                        "a",
+                        Clock.System.now(),
+                        null
+                    )
+                }
+            }
+        }.let { println("Creating 100k in 2d array took: ${it.duration}"); it.value }
+
+        measureTime {
+            ResourceService.insertUsages(emptyList(), true)
+        }.let { println("Warmup: $it") }
+
         measureTime {
             coroutineScope {
-                repeat(100) {
+                repeat(100) { i1 ->
                     coroutineScope {
-                        repeat(1000) {
+                        repeat(1000) { i2 ->
                             launch {
                                 ResourceService.insertUsages(
                                     listOf(
-                                        UsageResource(
-                                            UUID.generateUUID(),
-                                            UUID.generateUUID(),
-                                            UUID.generateUUID(),
-                                            "a",
-                                            Clock.System.now(),
-                                            null
-                                        )
+                                        x[i1][i2]
                                     )
                                 )
                             }
                         }
                     }
 
-                    println("$it%")
+                    println("$i1%")
                 }
             }
         }.also { println("Creation for 100k took: $it") }
@@ -94,6 +106,10 @@ object Tests {
         val group = UUID.generateUUID()
         val c = Clock.System
 
+        measureTime {
+            ResourceService.insertUsages(emptyList(), true)
+        }.let { println("Warmup: $it") }
+
         val resources = measureTimedValue {
             (1..1_000_000).map {
                 UsageResource(org, group, UUID.generateUUID(), "Weather", c.now(), null)
@@ -101,7 +117,7 @@ object Tests {
         }.also { println("Generating resources took: ${it.duration}") }
 
         measureTime {
-            ResourceService.insertUsages(resources.value).also {
+            ResourceService.insertUsages(resources.value, false).also {
                 println(
                     """
                 Inserted: ${resources.value.size} resources
@@ -117,9 +133,46 @@ object Tests {
             println("Inserting: $it")
         }
     }.also { println("Took: $it in total") }
+
+    suspend fun testBatchedInserts() {
+        println("Creating resources...")
+
+        val x = measureTimedValue {
+            Array(100) {
+                Array(1000) {
+                    UsageResource(
+                        UUID.generateUUID(),
+                        UUID.generateUUID(),
+                        UUID.generateUUID(),
+                        "a",
+                        Clock.System.now(),
+                        null
+                    )
+                }.toList()
+            }
+        }.also { println("Creating 100*1000 in took: ${it.duration}") }.value
+
+        measureTime {
+            ResourceService.insertUsages(emptyList(), true)
+        }.let { println("Warmup: $it") }
+
+        measureTime {
+            coroutineScope {
+                repeat(100) { i1 ->
+                    launch {
+                        ResourceService.insertUsages(
+                            x[i1]
+                        )
+                    }
+
+                    println("$i1%")
+                }
+            }
+        }.also { println("Creation for 100k took: $it") }
+    }
 }
 
 @Suppress("RedundantSuspendModifier")
-suspend fun main() = Tests.run {
-    testResourceClosing()
+suspend fun main(): Unit = Tests.run {
+    testBatchedInserts()
 }

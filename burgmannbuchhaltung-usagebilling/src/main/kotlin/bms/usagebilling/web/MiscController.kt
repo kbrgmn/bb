@@ -12,8 +12,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
 @SerialName("ApiKeyReadableInformation")
@@ -26,13 +24,23 @@ data class ApiKeyReadableInformation(
     @SerialName("API key will expire on") val expiresAt: String,
 )
 
+@Serializable
+@SerialName("StatusInformation")
+data class StatusInformation(
+    val web: Boolean,
+    @SerialName("db-cluster") val dbCluster: Boolean,
+    @SerialName("db-data") val dbData: Boolean
+) {
+    fun allOk() = web && dbCluster && dbData
+}
+
 fun Application.misc() {
     routing {
-        route("", {
+        route("info", {
             tags = listOf("Information")
         }) {
             authenticate(optional = true) {
-                get("api-key-info", {
+                get("api-key", {
                     summary = "View information about the API key you are using."
                     securitySchemeName = "jwt"
 
@@ -68,25 +76,25 @@ fun Application.misc() {
                 summary = "Displays the services operational status."
                 response {
                     HttpStatusCode.OK to {
-                        body<Map<String, Boolean>>()
+                        body<StatusInformation>()
                         description = "Service self-check OK"
                     }
                     HttpStatusCode.ServiceUnavailable to {
-                        body<Map<String, Boolean>>()
+                        body<StatusInformation>()
                         description = "Service self-check failed - Service unavailable"
                     }
                 }
             }) {
                 fun Result<Boolean>.isBoolTrue(): Boolean = this.getOrElse { it.printStackTrace(); false }
 
-                val statuses = mapOf(
-                    "web" to true,
-                    "db-cluster" to EventService.checkDatabaseConnectionStatus().isBoolTrue(),
-                    "db-data" to EventService.checkDatabaseTableStatus().isBoolTrue()
+                val status = StatusInformation(
+                    web = true,
+                    dbCluster = EventService.checkDatabaseConnectionStatus().isBoolTrue(),
+                    dbData = EventService.checkDatabaseTableStatus().isBoolTrue()
                 )
-                val status = if (statuses.values.all { it }) HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable
+                val httpStatus = if (status.allOk()) HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable
 
-                context.respond(status, JsonObject(statuses.mapValues { JsonPrimitive(it.value) }))
+                context.respond(httpStatus, status)
             }
         }
     }
