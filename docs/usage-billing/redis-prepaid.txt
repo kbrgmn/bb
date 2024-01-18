@@ -1,0 +1,51 @@
+-- Lua Script
+local balance = tonumber(redis.call('GET', KEYS[1]))
+
+if balance >= tonumber(ARGV[1]) then
+    redis.call('DECRBY', KEYS[1], ARGV[1])
+    return 1  -- Success
+else
+    return 0  -- Insufficient balance
+end
+
+
+
+
+
+
+
+
+
+
+import redis
+
+def decrement_balance(redis_client, key, amount):
+    # Watch the balance key
+    redis_client.watch(key)
+
+    # Start a transaction
+    with redis_client.pipeline() as pipe:
+        try:
+            # Add the Lua script to the transaction
+            pipe.eval("""
+                local balance = tonumber(redis.call('GET', KEYS[1]))
+                if balance >= tonumber(ARGV[1]) then
+                    redis.call('DECRBY', KEYS[1], ARGV[1])
+                    return 1  -- Success
+                else
+                    return 0  -- Insufficient balance
+                end
+            """, 1, key, amount)
+
+            # Execute the transaction
+            result = pipe.execute()
+
+            if result[0] == 1:
+                # Transaction successful, balance was decremented
+                print("Balance decremented successfully.")
+            else:
+                # Insufficient balance, handle accordingly
+                print("Insufficient balance.")
+        except redis.WatchError:
+            # Another client modified the key, retry the operation
+            print("Race condition detected, retrying...")

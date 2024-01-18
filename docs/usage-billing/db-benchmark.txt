@@ -1,0 +1,63 @@
+# Clickhouse Insert at once with wait
+Warmup: 530.597661ms
+Generating resources took: 515.667898ms
+Inserted: 1000000 resources
+1000000 rows read
+0 rows read total
+100000000 bytes read
+100000000 bytes written
+1000000 rows written
+Inserting: 1.488713102s
+Took: 2.556905092s in total (excl. warmup)
+
+# Clickhouse Insert at once without wait
+Warmup: 477.386158ms
+Generating resources took: 534.072755ms
+Inserted: 1000000 resources
+1000000 rows read
+0 rows read total
+100000000 bytes read
+100000000 bytes written
+1000000 rows written
+Inserting: 1.530737550s
+Took: 2.567303670s in total (excl. wait)
+
+# Clickhouse single inserts
+Creation for 100k took: 10.793373197s
+
+## Improved with pre-creation and warmup
+Creation for 100k took: 10.478517038s
+
+# Clickhouse Batched Insert
+Creating 100*1000 in took: 204.827536ms
+Warmup: 412.857954ms
+Creation for 100*1000 took: 236.154867ms
+
+
+InfluxDB, 100K each
+-- 1 --
+Point creation: 88.304156ms
+Point write: 902.494479ms
+Point overall: 994.561609ms
+-- 3 --
+Line creation: 46.035499ms
+Line write: 347.546335ms
+Line overall: 394.076145ms
+-- 2 --
+Class creation: 23.692021ms
+Class write: 583.847610ms
+Class overall: 608.088806ms
+
+InfluxDB: 1M each
+-- 1 --
+Point creation: 276.151465ms
+Point write: 5.257296150s
+Point overall: 5.536646026s
+-- 3 --
+Line creation: 154.132275ms
+Line write: 2.645879653s
+Line overall: 2.800384380s
+-- 2 --
+Class creation: 115.792994ms
+Class write: 4.387123564s
+Class overall: 4.503394489s
