@@ -1,0 +1,7 @@
+.github
+.idea
+.nuxt
+node_modules
+.output
+*-beispiel.json
+*.md

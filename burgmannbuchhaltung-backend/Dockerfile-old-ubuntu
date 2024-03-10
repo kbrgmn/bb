@@ -1,0 +1,14 @@
+FROM docker.io/gradle:jdk17 as buildstage
+
+COPY ./ /work
+WORKDIR /work
+RUN ./gradlew clean installDist
+
+FROM docker.io/eclipse-temurin:17
+RUN apt-get update && apt-get -y install poppler-utils unpaper tesseract-ocr tesseract-ocr-deu
+
+COPY --from=buildstage /work/build/install/ /
+WORKDIR /burgmannbuchhaltung-backend
+
+EXPOSE 8080
+ENTRYPOINT /burgmannbuchhaltung-backend/bin/burgmannbuchhaltung-backend

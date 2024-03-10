@@ -1,0 +1,47 @@
+[
+  {
+    Name: "Vortag",
+    Eingang: 11071.14
+  },
+  {
+    Name: "Losung",
+    Eingang: 11101.56
+  },
+  {
+    Name: "Lottoauszahlung",
+    Ausgang: 798.50
+  },
+  {
+    Name: "Kartenzahlung",
+    Ausgang: 2526.90
+  },
+  {
+    Name: "Automatenverkauf",
+    Ausgang: 0.0
+  },
+  {
+    Name: "Bankeinzahlung",
+    Ausgang: 29.13
+  },
+  {
+    Name: "Zähldifferenz",
+    Eingang: 0.49
+  },
+  {
+    Name: "Bankeinzahlung",
+    Ausgang: 9060.00
+  },
+  {Name: "Tageslosungenbar"},
+  {
+    Name: "Kassa Bank Sparkassa",
+    Kassastand: 7795.27
+  },
+  {
+    Name: "Münzladenstand",
+    Kassastand: 1982.50
+  },
+  {
+    Name: "Manko",
+    Eingang: 19.11
+  }
+]
