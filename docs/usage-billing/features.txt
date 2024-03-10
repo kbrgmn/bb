@@ -1,0 +1,13 @@
+- Verrechnen Sie Ihren Kunden vollautomatisch: einzelne Funktionsnutzungen, API-Aufrufe, genutze Ressourcen, und vieles mehr - das Modul ist vollkommen agnostisch welche Nutzungen oder Einheiten Sie verrechnen.
+- Stellen Sie im einfach zu benutzendem no-code Webinterface individuelle Tarife zusammen:
+    - legen Sie selbstständig **Freieinheiten und Abrechnungszeiträume** (z.B. monatlich, quartalsweise) fest,
+    - wählen Sie bei der Abrechnung zwischen: **Prepaid (Guthabenkonto) / Postpaid (Zahlung am Ende der Verrechnungsperiode)**
+- **Sekundengenaue Abrechnung**, oder geben Sie die Abrechnungszeiträume völlig individuell vor, z.B.: Virtuelle Server auf Stundenbasis; gespeicherte Gigabyte pro Tag; CPU Zeit in Sekunden.
+- Asynchrone Echtzeiterfassung von **zehntausenden Ereignisse pro Sekunde** - oder nachträgliche Nutzungsdatenauswertung.
+- Verschiedenste Preisbildungsmodelle möglich, um Ihrer Finanzabteilung völlige Freiheit bei der Vertragsauslegung an Ihre Kunden zu schaffen, z.B. Staffelpreismodell, Volumenpreismodell, Paketpreismodell. Auch hybride Modelle as Tarifen und Nutzungsbezogener Verrechnung bieten sich an.
+- Sind Sie im B2B2B Bereich tätig (Ihre Kunden sind nicht die Endverbraucher)? Stellen Sie Ihren Geschäftskunden eine fertige Abrechnung zur Verfügung - aufgeschlüsselt nach deren (Sub)-Kunden! (hierachische Tenanttrennung) - welche diese an deren Kunden weiterverrechnen können.
+- Sind Sie grenzübergreifend tätig? Die Überregionalitätsfunktionen von BesondereBuchhaltung (z.B. Fremd- & Multiwährungskontierung, autom. Verbuchung v. Fremdwährungen nach Zollwertkurs, mehrsprachige Rechnungslegung, EU-weite VAT/USt Steuer-Engine, konforme Geschäftskundenvalidierung für EU + weitere, uvm.) werden mit dem Modul Automatisierte Verrechnen fortgeführt, so können Sie etwa dem oftmals angefragtem Wunsch Ihrer Kunden nachkommen, die Verrechnung in dessen Zeitzone zu führen.
+- Stellen Sie Ihren Kunden ein Webportal zur Verfügung, mittels welchem diese ihre Abrechnungen einsehen, und ihre Rechnungen - selbstständig ohne zutun Ihrerseits - begleichen können.
+- **Integrieren Sie eine Vielzahl von Zahlungsanbietern** (z.B: Stripe (USA), Mollie (EU)) und verschiedene Zahlungsmethoden (z.B. Kartenzahlung, SEPA Überweisung, SEPA (Firmen-) Lastschrifteinzug)
+- Lassen Sie Ihren Kunden automatisch die aktuelle Rechnung zukommen, etwa als (auch S/MIME verschlüsselte) **PDF per Email, per Telefax, oder als Postbrief**.
+- Automatische Verbuchung der Ausgangsrechnungen in BesondereBuchhaltung.
